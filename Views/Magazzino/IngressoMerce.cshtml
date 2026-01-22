@@ -1,0 +1,90 @@
+@model StockMaster.ViewModels.Stock.IngressoMerceViewModel
+@{
+    ViewData["Title"] = "Ingresso Merce";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-box-arrow-in-down"></i> Ingresso Merce</h2>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Torna alla Dashboard
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="IngressoMerce" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Articolo -->
+                        <div class="mb-3">
+                            <label asp-for="ArticoloId" class="form-label"></label>
+                            <select asp-for="ArticoloId" class="form-select" asp-items="Model.Articoli">
+                                <option value="">-- Seleziona un articolo --</option>
+                            </select>
+                            <span asp-validation-for="ArticoloId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Fornitore -->
+                        <div class="mb-3">
+                            <label asp-for="FornitoreId" class="form-label"></label>
+                            <select asp-for="FornitoreId" class="form-select" asp-items="Model.Fornitori">
+                                <option value="">-- Seleziona un fornitore --</option>
+                            </select>
+                            <span asp-validation-for="FornitoreId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Quantità -->
+                        <div class="mb-3">
+                            <label asp-for="Quantita" class="form-label"></label>
+                            <input asp-for="Quantita" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="Quantita" class="text-danger"></span>
+                        </div>
+
+                        <!-- Codice Commessa -->
+                        <div class="mb-3">
+                            <label asp-for="CodiceCommessa" class="form-label"></label>
+                            <input asp-for="CodiceCommessa" class="form-control" />
+                            <small class="form-text text-muted">Opzionale - per collegamento con gestionale</small>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="mb-3">
+                            <label asp-for="Note" class="form-label"></label>
+                            <textarea asp-for="Note" class="form-control" rows="3"></textarea>
+                            <small class="form-text text-muted">Es: DDT n. 123/2025, Pallet n. 5</small>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Annulla
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Registra Ingresso
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="bi bi-info-circle"></i> Cosa succede quando registro un ingresso?</h6>
+                <ul class="mb-0">
+                    <li>Viene generato automaticamente un codice lotto univoco</li>
+                    <li>Il materiale viene inserito nella fase "Grezzo in Stock"</li>
+                    <li>Viene registrata una transizione di ingresso nello storico</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

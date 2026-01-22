@@ -1,0 +1,159 @@
+@model List<StockMaster.Models.Stock.ArticoloStock>
+@{
+    ViewData["Title"] = "Dettaglio Lotto";
+    var lotto = ViewBag.Lotto as string;
+    var storico = ViewBag.Storico as List<StockMaster.Models.Stock.TransizioneFase>;
+}
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-box"></i> Dettaglio Lotto</h2>
+            <h5 class="text-muted">@lotto</h5>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Torna alla Dashboard
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        var primoRecord = Model.First();
+        
+        <!-- Info Generale Lotto -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informazioni Articolo</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Codice:</dt>
+                            <dd class="col-sm-8"><strong>@primoRecord.CodiceArticolo</strong></dd>
+
+                            <dt class="col-sm-4">Descrizione:</dt>
+                            <dd class="col-sm-8">@primoRecord.Articolo?.Descrizione</dd>
+
+                            <dt class="col-sm-4">Fornitore:</dt>
+                            <dd class="col-sm-8">@(primoRecord.Fornitore?.Nome ?? "-")</dd>
+
+                            @if (primoRecord.Cliente != null)
+                            {
+                                <dt class="col-sm-4">Cliente:</dt>
+                                <dd class="col-sm-8">@primoRecord.Cliente.Nome</dd>
+                            }
+
+                            @if (!string.IsNullOrEmpty(primoRecord.CodiceCommessa))
+                            {
+                                <dt class="col-sm-4">Commessa:</dt>
+                                <dd class="col-sm-8"><span class="badge bg-info">@primoRecord.CodiceCommessa</span></dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Stato Attuale</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fase</th>
+                                    <th class="text-end">Quantità</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var stock in Model)
+                                {
+                                    <tr>
+                                        <td><strong>@stock.Fase</strong></td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@stock.Quantita</span>
+                                        </td>
+                                    </tr>
+                                }
+                                <tr class="table-light">
+                                    <td><strong>TOTALE</strong></td>
+                                    <td class="text-end">
+                                        <strong>@Model.Sum(s => s.Quantita)</strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storico Movimenti -->
+        @if (storico != null && storico.Any())
+        {
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="bi bi-clock-history"></i> Storico Completo Movimenti</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 15%;">Data/Ora</th>
+                                    <th style="width: 25%;">Movimento</th>
+                                    <th style="width: 10%;" class="text-center">Quantità</th>
+                                    <th style="width: 15%;">Operatore</th>
+                                    <th style="width: 35%;">Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var trans in storico)
+                                {
+                                    <tr>
+                                        <td>
+                                            <small>@trans.DataTransizione.ToString("dd/MM/yyyy")</small><br />
+                                            <small class="text-muted">@trans.DataTransizione.ToString("HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            @if (trans.FaseDa == null)
+                                            {
+                                                <span class="badge bg-success">INGRESSO</span>
+                                                <i class="bi bi-arrow-right mx-1"></i>
+                                                <strong>@trans.FaseA</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">@trans.FaseDa</span>
+                                                <i class="bi bi-arrow-right mx-1"></i>
+                                                <strong>@trans.FaseA</strong>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">@trans.Quantita</span>
+                                        </td>
+                                        <td>
+                                            <small>@(trans.OperatoreId ?? "Sistema")</small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@(trans.Note ?? "-")</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Nessun materiale trovato per questo lotto o lotto completamente esaurito.
+        </div>
+    }
+</div>

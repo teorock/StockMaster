@@ -1,0 +1,50 @@
+## Ignora file di build e dipendenze ##
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.cache
+*.ilk
+*.pdb
+*.dll
+*.exe
+
+## Ignora file di configurazione locale ##
+appsettings.Development.json
+appsettings.Local.json
+
+## Ignora database SQLite ##
+*.db
+*.db-shm
+*.db-wal
+
+## Ignora file IDE ##
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+## Ignora file di pubblicazione ##
+publish/
+
+## Ignora file temporanei ##
+tmp/
+temp/
+*.tmp
+*.temp
+
+## Ignora file di log ##
+*.log
+logs/
+
+## Ignora file di progetto specifici .NET ##
+*.csproj.user
+*.csproj.bak
+project.lock.json
+.DotSettings
+
+## Ignora migrazioni Entity Framework (opzionale - solo se vuoi escluderle) ##
+# Migrations/

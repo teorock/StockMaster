@@ -1,0 +1,287 @@
+@model StockMaster.ViewModels.Anagrafiche.ClientiViewModel
+@{
+    ViewData["Title"] = "Gestione Clienti";
+}
+
+@{
+    // Funzione helper per escape delle stringhe JavaScript
+    string EscapeJsString(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return "";
+        return value.Replace("\\", "\\\\")
+                    .Replace("'", "\\'")
+                    .Replace("\"", "\\\"")
+                    .Replace("\r", "\\r")
+                    .Replace("\n", "\\n");
+    }
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people"></i> Gestione Clienti</h2>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuovoCliente">
+            <i class="bi bi-plus-circle"></i> Nuovo Cliente
+        </button>
+    </div>
+
+    <!-- Messaggi -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tabella Clienti -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>P.IVA</th>
+                        <th>Telefono</th>
+                        <th>Email</th>
+                        <th>Stato</th>
+                        <th style="width: 150px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cliente in Model.Clienti)
+                    {
+                        <tr class="@(!cliente.Attivo ? "table-secondary" : "")">
+                            <td><strong>@cliente.Nome</strong></td>
+                            <td>@cliente.PartitaIva</td>
+                            <td>@cliente.Telefono</td>
+                            <td>@cliente.Email</td>
+                            <td>
+                                @if (cliente.Attivo)
+                                {
+                                    <span class="badge bg-success">Attivo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Non Attivo</span>
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="modificaCliente(@cliente.Id, '@EscapeJsString(cliente.Nome)', '@EscapeJsString(cliente.PartitaIva)', '@EscapeJsString(cliente.Indirizzo)', '@EscapeJsString(cliente.Telefono)', '@EscapeJsString(cliente.Email)', @(cliente.Attivo ? "true" : "false"), '@EscapeJsString(cliente.Note)')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="eliminaCliente(@cliente.Id, '@EscapeJsString(cliente.Nome)')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Clienti.Any())
+            {
+                <p class="text-center text-muted mt-4">Nessun cliente presente. Creane uno nuovo.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuovo/Modifica Cliente -->
+<div class="modal fade" id="modalNuovoCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form asp-action="SalvaCliente" method="post" id="formCliente">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nuovo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="clienteId" value="0" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clienteNome" class="form-label">Nome *</label>
+                            <input type="text" class="form-control" name="Nome" id="clienteNome" required />
+                            <span class="text-danger small" id="errorNome"></span>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="clientePartitaIva" class="form-label">Partita IVA</label>
+                            <input type="text" class="form-control" name="PartitaIva" id="clientePartitaIva" 
+                                   placeholder="12345678901" maxlength="11" />
+                            <span class="text-danger small" id="errorPartitaIva"></span>
+                            <small class="form-text text-muted">11 cifre (es: 04782350286)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="clienteIndirizzo" class="form-label">Indirizzo</label>
+                        <input type="text" class="form-control" name="Indirizzo" id="clienteIndirizzo" />
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="clienteTelefono" class="form-label">Telefono</label>
+                            <input type="tel" class="form-control" name="Telefono" id="clienteTelefono" 
+                                   placeholder="041-1234567" />
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="clienteEmail" class="form-label">Email *</label>
+                            <input type="email" class="form-control" name="Email" id="clienteEmail" required />
+                            <span class="text-danger small" id="errorEmail"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" name="Attivo" id="clienteAttivo" checked />
+                            <input type="hidden" name="Attivo" value="false" />
+                            <label class="form-check-label" for="clienteAttivo">
+                                Cliente attivo
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="clienteNote" class="form-label">Note</label>
+                        <textarea class="form-control" name="Note" id="clienteNote" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form eliminazione -->
+<form id="formElimina" asp-action="EliminaCliente" method="post" style="display:none;">
+    <input type="hidden" name="id" id="eliminaId" />
+</form>
+
+@section Scripts {
+    @if (TempData["MostraModal"] != null && TempData["ClienteCorrente"] != null)
+    {
+        <script>
+            var clienteDaRiaprire = @Html.Raw(TempData["ClienteCorrente"]);
+        </script>
+    }
+    
+    <script>
+        function validaPIVA(piva) {
+            if (!piva || piva.length === 0) return true;
+            
+            // Rimuovi spazi e trattini
+            piva = piva.trim().replace(/[\s-]/g, '');
+            
+            // Partita IVA italiana: 11 cifre
+            if (piva.length !== 11) return false;
+            
+            // Controlla che siano tutte cifre
+            if (!/^\d{11}$/.test(piva)) return false;
+            
+            return true;
+        }
+
+        function validaEmail(email) {
+            if (!email || email.length === 0) return false; // Email è obbligatoria
+            return email.indexOf('@@') > 0 && email.indexOf('.') > email.indexOf('@@');
+        }
+
+        $(document).ready(function() {
+            $('#formCliente').on('submit', function(e) {
+                var isValid = true;
+                $('.is-invalid').removeClass('is-invalid');
+                $('.text-danger').text('');
+                
+                var nome = $('#clienteNome').val().trim();
+                if (!nome) {
+                    $('#clienteNome').addClass('is-invalid');
+                    $('#errorNome').text('Il nome è obbligatorio');
+                    isValid = false;
+                }
+                
+                var piva = $('#clientePartitaIva').val().trim();
+                if (piva && !validaPIVA(piva)) {
+                    $('#clientePartitaIva').addClass('is-invalid');
+                    $('#errorPartitaIva').text('Partita IVA non valida (11 cifre richieste)');
+                    isValid = false;
+                }
+                
+                var email = $('#clienteEmail').val().trim();
+                if (!validaEmail(email)) {
+                    $('#clienteEmail').addClass('is-invalid');
+                    $('#errorEmail').text('Email non valida');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            $('#clienteNome, #clientePartitaIva, #clienteEmail').on('input', function() {
+                $(this).removeClass('is-invalid');
+                var field = this.id.replace('cliente', '');
+                $('#error' + field).text('');
+            });
+            
+            if (typeof clienteDaRiaprire !== 'undefined') {
+                document.getElementById('clienteId').value = clienteDaRiaprire.Id || 0;
+                document.getElementById('clienteNome').value = clienteDaRiaprire.Nome || '';
+                document.getElementById('clientePartitaIva').value = clienteDaRiaprire.PartitaIva || '';
+                document.getElementById('clienteIndirizzo').value = clienteDaRiaprire.Indirizzo || '';
+                document.getElementById('clienteTelefono').value = clienteDaRiaprire.Telefono || '';
+                document.getElementById('clienteEmail').value = clienteDaRiaprire.Email || '';
+                document.getElementById('clienteAttivo').checked = clienteDaRiaprire.Attivo;
+                document.getElementById('clienteNote').value = clienteDaRiaprire.Note || '';
+                new bootstrap.Modal(document.getElementById('modalNuovoCliente')).show();
+            }
+        });
+
+        function modificaCliente(id, nome, piva, indirizzo, telefono, email, attivo, note) {
+            document.getElementById('modalTitle').textContent = 'Modifica Cliente';
+            document.getElementById('clienteId').value = id;
+            document.getElementById('clienteNome').value = nome;
+            document.getElementById('clientePartitaIva').value = piva || '';
+            document.getElementById('clienteIndirizzo').value = indirizzo || '';
+            document.getElementById('clienteTelefono').value = telefono || '';
+            document.getElementById('clienteEmail').value = email || '';
+            document.getElementById('clienteAttivo').checked = attivo;
+            document.getElementById('clienteNote').value = note || '';
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+            new bootstrap.Modal(document.getElementById('modalNuovoCliente')).show();
+        }
+
+        function eliminaCliente(id, nome) {
+            if (confirm('Confermi l\'eliminazione del cliente \'' + nome + '\'?')) {
+                document.getElementById('eliminaId').value = id;
+                document.getElementById('formElimina').submit();
+            }
+        }
+
+        document.getElementById('modalNuovoCliente').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('modalTitle').textContent = 'Nuovo Cliente';
+            document.getElementById('clienteId').value = '0';
+            document.getElementById('formCliente').reset();
+            document.getElementById('clienteAttivo').checked = true;
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+        });
+    </script>
+}

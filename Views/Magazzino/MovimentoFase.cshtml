@@ -1,0 +1,205 @@
+@model StockMaster.ViewModels.Stock.MovimentoFaseViewModel
+@{
+    ViewData["Title"] = "Movimento tra Fasi";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-arrow-left-right"></i> Movimento tra Fasi</h2>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Torna alla Dashboard
+                </a>
+            </div>
+
+            <!-- Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="MovimentoFase" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Lotto -->
+                        <div class="mb-3">
+                            <label asp-for="LottoRiferimento" class="form-label"></label>
+                            <select asp-for="LottoRiferimento" class="form-select" asp-items="Model.Lotti">
+                                <option value="">-- Seleziona un lotto --</option>
+                            </select>
+                            <span asp-validation-for="LottoRiferimento" class="text-danger"></span>
+                            <small class="form-text text-muted">Seleziona il lotto da movimentare - la fase verrà selezionata automaticamente</small>
+                        </div>
+
+                        <!-- Info Lotto (popolata dinamicamente) -->
+                        <div id="infoLottoContainer" class="alert alert-info" style="display: none;">
+                            <strong><i class="bi bi-info-circle"></i> Informazioni Lotto:</strong><br>
+                            <div id="infoLottoText"></div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Da Fase -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FaseDa" class="form-label"></label>
+                                <select asp-for="FaseDa" class="form-select" asp-items="Model.Fasi">
+                                    <option value="">-- Seleziona fase di partenza --</option>
+                                </select>
+                                <span asp-validation-for="FaseDa" class="text-danger"></span>
+                            </div>
+
+                            <!-- A Fase -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FaseA" class="form-label"></label>
+                                <select asp-for="FaseA" class="form-select" asp-items="Model.Fasi">
+                                    <option value="">-- Seleziona fase di arrivo --</option>
+                                </select>
+                                <span asp-validation-for="FaseA" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Sezione Quantità -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-calculator"></i> Quantità</h6>
+                                
+                                <div class="row">
+                                    <!-- Quantità da spostare -->
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Quantita" class="form-label"></label>
+                                        <input asp-for="Quantita" class="form-control" type="number" min="0" />
+                                        <span asp-validation-for="Quantita" class="text-danger"></span>
+                                        <small class="form-text text-muted">Pezzi che passano alla fase successiva</small>
+                                    </div>
+
+                                    <!-- Quantità scartata -->
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="QuantitaScartata" class="form-label"></label>
+                                        <input asp-for="QuantitaScartata" class="form-control" type="number" min="0" value="0" />
+                                        <span asp-validation-for="QuantitaScartata" class="text-danger"></span>
+                                        <small class="form-text text-muted">Pezzi difettosi/rotti (opzionale)</small>
+                                    </div>
+                                </div>
+
+                                <!-- Motivo Scarto (appare solo se QuantitaScartata > 0) -->
+                                <div id="motivoScartoContainer" style="display: none;">
+                                    <div class="alert alert-warning">
+                                        <strong><i class="bi bi-exclamation-triangle"></i> Attenzione:</strong> Stai scartando materiale. Indica il motivo.
+                                    </div>
+                                    <div class="mb-3">
+                                        <label asp-for="MotivoScarto" class="form-label"></label>
+                                        <textarea asp-for="MotivoScarto" class="form-control" rows="2" placeholder="Es: Scheggiature, Errore lavorazione, Difetti superficie..."></textarea>
+                                        <span asp-validation-for="MotivoScarto" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cliente (opzionale) -->
+                        <div class="mb-3">
+                            <label asp-for="ClienteId" class="form-label"></label>
+                            <select asp-for="ClienteId" class="form-select" asp-items="Model.Clienti">
+                            </select>
+                            <small class="form-text text-muted">Seleziona se il materiale è destinato a un cliente specifico</small>
+                        </div>
+
+                        <!-- Codice Commessa -->
+                        <div class="mb-3">
+                            <label asp-for="CodiceCommessa" class="form-label"></label>
+                            <input asp-for="CodiceCommessa" class="form-control" />
+                            <small class="form-text text-muted">Opzionale - per collegamento con PFC/gestionale</small>
+                        </div>
+
+                        <!-- Note -->
+                        <div class="mb-3">
+                            <label asp-for="Note" class="form-label"></label>
+                            <textarea asp-for="Note" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Annulla
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Registra Movimento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="bi bi-info-circle"></i> Come funziona</h6>
+                <ul class="mb-0">
+                    <li><strong>Movimento normale:</strong> Indica solo "Quantità da spostare"</li>
+                    <li><strong>Con scarti:</strong> Indica sia "Quantità da spostare" che "Quantità scartata" + motivo</li>
+                    <li><strong>Solo scarti:</strong> Metti "Quantità da spostare" = 0 e compila solo "Quantità scartata"</li>
+                    <li>Gli scarti vengono tracciati per statistiche ma non "bloccano" il flusso</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Auto-selezione Fase da Lotto ---
+            const lottoSelect = document.getElementById('LottoRiferimento');
+            const faseDaSelect = document.getElementById('FaseDa');
+            const infoLottoContainer = document.getElementById('infoLottoContainer');
+            const infoLottoText = document.getElementById('infoLottoText');
+            
+                        lottoSelect.addEventListener('change', function() {
+                            const valueSelezionato = this.value; // Es: "LOTTO_2025_XXX|verniciatura"
+                            
+                            if (!valueSelezionato) {
+                                faseDaSelect.value = '';
+                                if (infoLottoContainer) infoLottoContainer.style.display = 'none';
+                                return;
+                            }
+                            
+                            // Separa: "LOTTO|FASE"
+                            const [lotto, fase] = valueSelezionato.split('|');
+                            
+                            // POPOLA AUTOMATICAMENTE "Da Fase"
+                            faseDaSelect.value = fase;
+                            
+                            // Mostra info (opzionale, per conferma visiva)
+                            if (infoLottoContainer && infoLottoText) {
+                                const selectedOption = this.options[this.selectedIndex];
+                                const text = selectedOption.text; // Es: "LOTTO_XXX - PAN-ROV (verniciatura, 25 pz)"
+                                
+                                // Estrai info dal text del dropdown
+                                const match = text.match(/\(([^,]+),\s*(\d+)\s*pz\)/);
+                                if (match) {
+                                    const faseText = match[1];
+                                    const quantita = match[2];
+                                    
+                                    infoLottoText.innerHTML = `
+                                        Fase selezionata: <span class="badge bg-primary">${faseText}</span><br>
+                                        Disponibili: <strong>${quantita} pz</strong>
+                                    `;
+                                    infoLottoContainer.style.display = 'block';
+                                }
+                            }
+                        });
+            
+            // --- Mostra/Nascondi campo Motivo Scarto ---
+            const quantitaScartatoInput = document.getElementById('QuantitaScartata');
+            const motivoScartoContainer = document.getElementById('motivoScartoContainer');
+            
+            if (quantitaScartatoInput && motivoScartoContainer) {
+                quantitaScartatoInput.addEventListener('input', function() {
+                    if (parseInt(this.value) > 0) {
+                        motivoScartoContainer.style.display = 'block';
+                    } else {
+                        motivoScartoContainer.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,215 @@
+@model StockMaster.ViewModels.Stock.DashboardViewModel
+@{
+    ViewData["Title"] = "Gestione Magazzino - Dashboard";
+}
+
+<div class="container-fluid mt-4">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h2><i class="bi bi-box-seam"></i> Gestione Magazzino</h2>
+                    <p class="text-muted">Stato corrente e movimenti recenti</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a asp-action="IngressoMerce" class="btn btn-success me-2">
+                        <i class="bi bi-plus-circle"></i> Ingresso Merce
+                    </a>
+                    <a asp-action="MovimentoFase" class="btn btn-primary">
+                        <i class="bi bi-arrow-left-right"></i> Movimento Fase
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtro Cliente -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <form asp-action="Index" method="get" id="filtroClienteForm">
+                        <div class="input-group">
+                            <label class="input-group-text" for="clienteId">
+                                <i class="bi bi-funnel"></i> Filtra Cliente
+                            </label>
+                            <select class="form-select" 
+                                    id="clienteId" 
+                                    name="clienteId" 
+                                    asp-items="Model.Clienti"
+                                    onchange="document.getElementById('filtroClienteForm').submit();">
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                @if (Model.ClienteSelezionatoId.HasValue)
+                {
+                    <div class="col-md-8">
+                        <div class="alert alert-info mb-0 d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="bi bi-filter-circle"></i> Visualizzazione filtrata per cliente selezionato
+                            </span>
+                            <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Rimuovi Filtro
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+    <!-- Messaggi di successo -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Cards Statistiche Rapide -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Lotti Attivi</h5>
+                    <h2 class="mb-0">@Model.TotaleLottiAttivi</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Articoli Gestiti</h5>
+                    <h2 class="mb-0">@Model.TotaleArticoliGestiti</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Totale Unità</h5>
+                    <h2 class="mb-0">@Model.StatoPerFase.Sum(s => s.TotaleUnita)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Fasi Attive</h5>
+                    <h2 class="mb-0">@Model.StatoPerFase.Count</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stato per Fase -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Stato Magazzino per Fase</h4>
+        </div>
+
+        @if (Model.StatoPerFase.Any())
+        {
+            @foreach (var fase in Model.StatoPerFase)
+            {
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card border-@fase.CssClass">
+                        <div class="card-header bg-@fase.CssClass text-white">
+                            <strong>@fase.FaseDescrizione</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Unità:</span>
+                                <h4 class="mb-0 text-@fase.CssClass">@fase.TotaleUnita</h4>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted">Lotti:</span>
+                                <span class="badge bg-@fase.CssClass">@fase.NumeroLotti</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nessun materiale presente in magazzino. Inizia registrando un ingresso merce!
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Ultimi Movimenti -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Ultimi Movimenti</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.UltimiMovimenti.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data/Ora</th>
+                                        <th>Lotto</th>
+                                        <th>Movimento</th>
+                                        <th>Quantità</th>
+                                        <th>Note</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var mov in Model.UltimiMovimenti)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <small>@mov.DataTransizione.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </td>
+                                            <td>
+                                                <a asp-action="DettaglioLotto" asp-route-lotto="@mov.LottoRiferimento" 
+                                                   class="text-decoration-none">
+                                                    <small>@mov.LottoRiferimento</small>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                @if (mov.FaseDa == null)
+                                                {
+                                                    <span class="badge bg-success">INGRESSO</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">@mov.FaseDa</span>
+                                                }
+                                                <i class="bi bi-arrow-right mx-1"></i>
+                                                <strong class="small">@mov.FaseA</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">@mov.Quantita</span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@(mov.Note ?? "-")</small>
+                                            </td>
+                                            <td>
+                                                <a asp-action="DettaglioLotto" asp-route-lotto="@mov.LottoRiferimento" 
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2">Nessun movimento registrato</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

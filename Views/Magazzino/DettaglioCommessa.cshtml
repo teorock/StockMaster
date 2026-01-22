@@ -1,0 +1,198 @@
+@model StockMaster.ViewModels.Stock.DettaglioCommessaViewModel
+@{
+    ViewData["Title"] = "Dettaglio Commessa";
+}
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-file-earmark-text"></i> Dettaglio Commessa</h2>
+            <h4 class="text-muted">@Model.CodiceCommessa</h4>
+        </div>
+        <div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <a asp-action="CercaCommessa" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Cerca Altra Commessa
+            </a>
+        </div>
+    </div>
+
+    <!-- Info Generale -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Informazioni</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        @if (!string.IsNullOrEmpty(Model.NomeCliente))
+                        {
+                            <dt class="col-sm-5">Cliente:</dt>
+                            <dd class="col-sm-7">
+                                <strong>@Model.NomeCliente</strong>
+                            </dd>
+                        }
+                        <dt class="col-sm-5">Lotti:</dt>
+                        <dd class="col-sm-7">@Model.TotaleLotti</dd>
+
+                        <dt class="col-sm-5">Totale Unità:</dt>
+                        <dd class="col-sm-7"><strong>@Model.TotaleUnita</strong></dd>
+
+                        <dt class="col-sm-5">Consegnate:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-success">@Model.UnitaConsegnate</span>
+                        </dd>
+
+                        @if (Model.DataPrimoIngresso.HasValue)
+                        {
+                            <dt class="col-sm-5">Primo Ingresso:</dt>
+                            <dd class="col-sm-7">
+                                <small>@Model.DataPrimoIngresso.Value.ToString("dd/MM/yyyy")</small>
+                            </dd>
+                        }
+
+                        @if (Model.DataUltimoMovimento.HasValue)
+                        {
+                            <dt class="col-sm-5">Ultimo Movimento:</dt>
+                            <dd class="col-sm-7">
+                                <small>@Model.DataUltimoMovimento.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                            </dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Avanzamento Lavori</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Completamento</span>
+                            <strong>@Model.PercentualeCompletamento.ToString("F1")%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar @(Model.PercentualeCompletamento == 100 ? "bg-success" : "bg-primary")" 
+                                 role="progressbar" 
+                                 style="width: @Model.PercentualeCompletamento%"
+                                 aria-valuenow="@Model.PercentualeCompletamento" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                @Model.PercentualeCompletamento.ToString("F1")%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo per Fase -->
+                    <div class="row mt-3">
+                        @{
+                            var raggruppatoPerFase = Model.Lotti.GroupBy(l => l.Fase)
+                                .Select(g => new { Fase = g.Key, Quantita = g.Sum(l => l.Quantita) })
+                                .OrderBy(f => f.Fase);
+                        }
+                        @foreach (var fase in raggruppatoPerFase)
+                        {
+                            <div class="col-md-4 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">@fase.Fase:</small>
+                                    <span class="badge bg-secondary">@fase.Quantita pz</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabella Dettaglio Lotti -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Dettaglio Lotti e Fasi</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Lotto</th>
+                            <th>Articolo</th>
+                            <th>Fase</th>
+                            <th class="text-center">Quantità</th>
+                            <th>Data Creazione</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lotto in Model.Lotti.OrderBy(l => l.LottoRiferimento).ThenBy(l => l.Fase))
+                        {
+                            <tr>
+                                <td>
+                                    <small class="font-monospace">@lotto.LottoRiferimento</small>
+                                </td>
+                                <td>
+                                    <strong>@lotto.CodiceArticolo</strong><br>
+                                    <small class="text-muted">@lotto.DescrizioneArticolo</small>
+                                </td>
+                                <td>
+                                    <span class="badge @GetFaseBadgeClass(lotto.Fase)">
+                                        @lotto.Fase
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <strong>@lotto.Quantita</strong>
+                                </td>
+                                <td>
+                                    <small>@lotto.DataCreazione.ToString("dd/MM/yyyy")</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(lotto.Note ?? "-")</small>
+                                </td>
+                                <td>
+                                    <a asp-action="DettaglioLotto" asp-route-lotto="@lotto.LottoRiferimento" 
+                                       class="btn btn-sm btn-outline-secondary" 
+                                       title="Vedi storico completo">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>TOTALE:</strong></td>
+                            <td class="text-center"><strong>@Model.TotaleUnita</strong></td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetFaseBadgeClass(string fase)
+    {
+        return fase switch
+        {
+            "grezzo_stock" => "bg-secondary",
+            "lav_nesting" => "bg-info",
+            "lav_bordatura" => "bg-primary",
+            "verniciatura" => "bg-warning text-dark",
+            "rilavorazione" => "bg-danger",
+            "finito_stock" => "bg-success",
+            "consegnato" => "bg-dark",
+            "scarto" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}
