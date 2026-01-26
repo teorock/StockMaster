@@ -24,8 +24,18 @@ namespace StockMaster.Controllers
         {
             var viewModel = new ArticoliViewModel
             {
-                Articoli = await _context.Articoli.OrderBy(a => a.Codice).ToListAsync()
+                Articoli = await _context.Articoli
+                    .Include(a => a.Materiale)
+                    .OrderBy(a => a.Codice)
+                    .ToListAsync()
             };
+            
+            ViewBag.Materiali = await _context.Materiali
+                .Where(m => m.Attivo)
+                .OrderBy(m => m.Nome)
+                .Select(m => new { m.Id, m.Nome })
+                .ToListAsync();
+            
             return View(viewModel);
         }
 
@@ -379,5 +389,91 @@ namespace StockMaster.Controllers
 
             return RedirectToAction(nameof(Clienti));
         }
+
+        // ========== MATERIALI ==========
+
+        public async Task<IActionResult> Materiali()
+        {
+            var viewModel = new MaterialiViewModel
+            {
+                Materiali = await _context.Materiali.OrderBy(m => m.Nome).ToListAsync()
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvaMateriale(Materiale materiale)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errori = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                TempData["ErrorMessage"] = "❌ Dati non validi: " + string.Join(", ", errori);
+                TempData["MaterialeCorrente"] = System.Text.Json.JsonSerializer.Serialize(materiale);
+                TempData["MostraModal"] = "modalNuovoMateriale";
+                
+                return RedirectToAction(nameof(Materiali));
+            }
+
+            try
+            {
+                if (materiale.Id == 0)
+                {
+                    materiale.DataCreazione = DateTime.Now;
+                    _context.Materiali.Add(materiale);
+                }
+                else
+                {
+                    _context.Materiali.Update(materiale);
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"✅ Materiale '{materiale.Nome}' salvato";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"❌ Errore: {ex.InnerException?.Message ?? ex.Message}";
+                TempData["MaterialeCorrente"] = System.Text.Json.JsonSerializer.Serialize(materiale);
+                TempData["MostraModal"] = "modalNuovoMateriale";
+            }
+
+            return RedirectToAction(nameof(Materiali));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminaMateriale(int id)
+        {
+            try
+            {
+                var materiale = await _context.Materiali.FindAsync(id);
+                if (materiale == null)
+                {
+                    TempData["ErrorMessage"] = "Materiale non trovato";
+                    return RedirectToAction(nameof(Materiali));
+                }
+
+                var haArticoli = await _context.Articoli.AnyAsync(a => a.MaterialeId == id);
+                if (haArticoli)
+                {
+                    TempData["ErrorMessage"] = "❌ Impossibile eliminare: materiale collegato ad articoli";
+                    return RedirectToAction(nameof(Materiali));
+                }
+
+                _context.Materiali.Remove(materiale);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"✅ Materiale '{materiale.Nome}' eliminato";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"❌ Errore: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Materiali));
+        }        
     }
 }

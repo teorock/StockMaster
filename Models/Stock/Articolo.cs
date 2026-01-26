@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StockMaster.Models.Stock
 {
@@ -24,8 +25,11 @@ namespace StockMaster.Models.Stock
         [StringLength(50)]
         public string? Categoria { get; set; } // es: "Pannelli", "Bordi", "Accessori"
 
-        [StringLength(50)]
-        public string? Materiale { get; set; } // es: "Hpl", "Truciolare", "Mdf"        
+        // MODIFICATO: da string a foreign key
+        public int? MaterialeId { get; set; }
+        
+        [ForeignKey(nameof(MaterialeId))]
+        public virtual Materiale? Materiale { get; set; }
 
         public string? Note { get; set; }
 

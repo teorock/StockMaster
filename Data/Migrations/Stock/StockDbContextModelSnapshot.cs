@@ -40,9 +40,8 @@ namespace StockMaster.Data.Migrations.Stock
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Materiale")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("MaterialeId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Note")
                         .HasColumnType("TEXT");
@@ -56,6 +55,8 @@ namespace StockMaster.Data.Migrations.Stock
                     b.HasIndex("Codice")
                         .IsUnique()
                         .HasDatabaseName("IX_Articolo_Codice_Unique");
+
+                    b.HasIndex("MaterialeId");
 
                     b.ToTable("Articoli");
                 });
@@ -293,6 +294,32 @@ namespace StockMaster.Data.Migrations.Stock
                     b.ToTable("Fornitori");
                 });
 
+            modelBuilder.Entity("StockMaster.Models.Stock.Materiale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Attivo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DataCreazione")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Descrizione")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Materiali");
+                });
+
             modelBuilder.Entity("StockMaster.Models.Stock.TransizioneFase", b =>
                 {
                     b.Property<int>("Id")
@@ -337,6 +364,15 @@ namespace StockMaster.Data.Migrations.Stock
                     b.ToTable("TransizioniFase");
                 });
 
+            modelBuilder.Entity("StockMaster.Models.Stock.Articolo", b =>
+                {
+                    b.HasOne("StockMaster.Models.Stock.Materiale", "Materiale")
+                        .WithMany("Articoli")
+                        .HasForeignKey("MaterialeId");
+
+                    b.Navigation("Materiale");
+                });
+
             modelBuilder.Entity("StockMaster.Models.Stock.ArticoloStock", b =>
                 {
                     b.HasOne("StockMaster.Models.Stock.Articolo", "Articolo")
@@ -373,6 +409,11 @@ namespace StockMaster.Data.Migrations.Stock
             modelBuilder.Entity("StockMaster.Models.Stock.Fornitore", b =>
                 {
                     b.Navigation("Forniture");
+                });
+
+            modelBuilder.Entity("StockMaster.Models.Stock.Materiale", b =>
+                {
+                    b.Navigation("Articoli");
                 });
 #pragma warning restore 612, 618
         }

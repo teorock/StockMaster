@@ -1,0 +1,200 @@
+@model StockMaster.ViewModels.Anagrafiche.MaterialiViewModel
+@{
+    ViewData["Title"] = "Gestione Materiali";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-layers"></i> Gestione Materiali</h2>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuovoMateriale">
+            <i class="bi bi-plus-circle"></i> Nuovo Materiale
+        </button>
+    </div>
+
+    <!-- Messaggi -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tabella Materiali -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrizione</th>
+                        <th>Stato</th>
+                        <th>Data Creazione</th>
+                        <th style="width: 150px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var materiale in Model.Materiali)
+                    {
+                        <tr class="@(!materiale.Attivo ? "table-secondary" : "")">
+                            <td><strong>@materiale.Nome</strong></td>
+                            <td>@materiale.Descrizione</td>
+                            <td>
+                                @if (materiale.Attivo)
+                                {
+                                    <span class="badge bg-success">Attivo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Non Attivo</span>
+                                }
+                            </td>
+                            <td><small>@materiale.DataCreazione.ToString("dd/MM/yyyy")</small></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="modificaMateriale(@materiale.Id, '@materiale.Nome', '@materiale.Descrizione', @materiale.Attivo.ToString().ToLower())">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="eliminaMateriale(@materiale.Id, '@materiale.Nome')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Materiali.Any())
+            {
+                <p class="text-center text-muted mt-4">Nessun materiale presente. Creane uno nuovo.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuovo/Modifica Materiale -->
+<div class="modal fade" id="modalNuovoMateriale" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SalvaMateriale" method="post" id="formMateriale">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nuovo Materiale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="materialeId" value="0" />
+                    
+                    <div class="mb-3">
+                        <label for="materialeNome" class="form-label">Nome *</label>
+                        <input type="text" class="form-control" name="Nome" id="materialeNome" required 
+                               placeholder="Es: Rovere, Tiglio, MDF, etc." />
+                        <span class="text-danger small" id="errorNome"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="materialeDescrizione" class="form-label">Descrizione</label>
+                        <textarea class="form-control" name="Descrizione" id="materialeDescrizione" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" name="Attivo" id="materialeAttivo" checked />
+                            <input type="hidden" name="Attivo" value="false" />
+                            <label class="form-check-label" for="materialeAttivo">
+                                Materiale attivo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form eliminazione -->
+<form id="formElimina" asp-action="EliminaMateriale" method="post" style="display:none;">
+    <input type="hidden" name="id" id="eliminaId" />
+</form>
+
+@section Scripts {
+    @if (TempData["MostraModal"] != null && TempData["MaterialeCorrente"] != null)
+    {
+        <script>
+            var materialeDaRiaprire = @Html.Raw(TempData["MaterialeCorrente"]);
+        </script>
+    }
+    
+    <script>
+        $(document).ready(function() {
+            $('#formMateriale').on('submit', function(e) {
+                var isValid = true;
+                $('.is-invalid').removeClass('is-invalid');
+                $('.text-danger').text('');
+                
+                var nome = $('#materialeNome').val().trim();
+                if (!nome) {
+                    $('#materialeNome').addClass('is-invalid');
+                    $('#errorNome').text('Il nome è obbligatorio');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            $('#materialeNome').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $('#errorNome').text('');
+            });
+            
+            if (typeof materialeDaRiaprire !== 'undefined') {
+                document.getElementById('materialeId').value = materialeDaRiaprire.Id || 0;
+                document.getElementById('materialeNome').value = materialeDaRiaprire.Nome || '';
+                document.getElementById('materialeDescrizione').value = materialeDaRiaprire.Descrizione || '';
+                document.getElementById('materialeAttivo').checked = materialeDaRiaprire.Attivo;
+                new bootstrap.Modal(document.getElementById('modalNuovoMateriale')).show();
+            }
+        });
+
+        function modificaMateriale(id, nome, descrizione, attivo) {
+            document.getElementById('modalTitle').textContent = 'Modifica Materiale';
+            document.getElementById('materialeId').value = id;
+            document.getElementById('materialeNome').value = nome;
+            document.getElementById('materialeDescrizione').value = descrizione || '';
+            document.getElementById('materialeAttivo').checked = attivo;
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+            new bootstrap.Modal(document.getElementById('modalNuovoMateriale')).show();
+        }
+
+        function eliminaMateriale(id, nome) {
+            if (confirm('Confermi l\'eliminazione del materiale \'' + nome + '\'?')) {
+                document.getElementById('eliminaId').value = id;
+                document.getElementById('formElimina').submit();
+            }
+        }
+
+        document.getElementById('modalNuovoMateriale').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('modalTitle').textContent = 'Nuovo Materiale';
+            document.getElementById('materialeId').value = '0';
+            document.getElementById('formMateriale').reset();
+            document.getElementById('materialeAttivo').checked = true;
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+        });
+    </script>
+}

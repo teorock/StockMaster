@@ -122,6 +122,13 @@
 
                     <div class="mb-3">
                         <label class="form-label">Materiale</label>
+                        <select class="form-select" name="MaterialeId" id="articoloMaterialeId">
+                            <option value="">-- Nessun materiale --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Materiale</label>
                         <input type="text" class="form-control" name="Materiale" id="articoloMateriale" />
                     </div>         
 
@@ -181,6 +188,18 @@
 
 @section Scripts {
     <script>
+
+        // Popola dropdown materiali
+        $(document).ready(function() {
+            var materiali = @Html.Raw(Json.Serialize(ViewBag.Materiali ?? new List<object>()));
+            var selectMateriale = $('#articoloMaterialeId');
+            
+            materiali.forEach(function(m) {
+                selectMateriale.append('<option value="' + m.id + '">' + m.nome + '</option>');
+            });
+        });
+
+
         function modificaArticolo(id, codice, descrizione, um, categoria, materiale, note) {
             document.getElementById('modalTitle').textContent = 'Modifica Articolo';
             document.getElementById('articoloId').value = id;
