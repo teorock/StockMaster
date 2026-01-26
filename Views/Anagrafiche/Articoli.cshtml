@@ -63,11 +63,11 @@
                             <td>@articolo.Descrizione</td>
                             <td>@articolo.UnitaMisura</td>
                             <td>@articolo.Categoria</td>
-                            <td>@articolo.Materiale</td>
+                            <td>@articolo.Materiale?.Nome</td>
                             <td><small>@articolo.DataCreazione.ToString("dd/MM/yyyy")</small></td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="modificaArticolo(@articolo.Id, '@articolo.Codice', '@articolo.Descrizione', '@articolo.UnitaMisura', '@articolo.Categoria', '@articolo.Note')">
+                                        onclick="modificaArticolo(@articolo.Id, '@articolo.Codice', '@articolo.Descrizione', '@articolo.UnitaMisura', '@articolo.Categoria', @(articolo.MaterialeId?.ToString() ?? "null"), '@articolo.Note')">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -125,12 +125,7 @@
                         <select class="form-select" name="MaterialeId" id="articoloMaterialeId">
                             <option value="">-- Nessun materiale --</option>
                         </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Materiale</label>
-                        <input type="text" class="form-control" name="Materiale" id="articoloMateriale" />
-                    </div>         
+                    </div>  
 
                     <div class="mb-3">
                         <label class="form-label">Note</label>
@@ -207,7 +202,7 @@
             document.getElementById('articoloDescrizione').value = descrizione;
             document.getElementById('articoloUM').value = um || '';
             document.getElementById('articoloCategoria').value = categoria || '';
-            document.getElementById('articoloMateriale').value = materiale || '';
+            document.getElementById('articoloMaterialeId').value = materiale || '';
             document.getElementById('articoloNote').value = note || '';
             
             new bootstrap.Modal(document.getElementById('modalNuovoArticolo')).show();
