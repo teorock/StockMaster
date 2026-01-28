@@ -1,0 +1,238 @@
+@model StockMaster.ViewModels.Anagrafiche.ColoriViewModel
+@{
+    ViewData["Title"] = "Gestione Colori";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-palette"></i> Gestione Colori</h2>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuovoColore">
+            <i class="bi bi-plus-circle"></i> Nuovo Colore
+        </button>
+    </div>
+
+    <!-- Messaggi -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Tabella Colori -->
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Preview</th>
+                        <th>Nome</th>
+                        <th>Descrizione</th>
+                        <th>Codice Hex</th>
+                        <th>Stato</th>
+                        <th>Data Creazione</th>
+                        <th style="width: 150px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var colore in Model.Colori)
+                    {
+                        <tr class="@(!colore.Attivo ? "table-secondary" : "")">
+                            <td>
+                                @if (!string.IsNullOrEmpty(colore.CodiceHex))
+                                {
+                                    <div style="width: 30px; height: 30px; background-color: @colore.CodiceHex; border: 1px solid #ccc; border-radius: 4px;"></div>
+                                }
+                            </td>
+                            <td><strong>@colore.Nome</strong></td>
+                            <td>@colore.Descrizione</td>
+                            <td><code>@colore.CodiceHex</code></td>
+                            <td>
+                                @if (colore.Attivo)
+                                {
+                                    <span class="badge bg-success">Attivo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Non Attivo</span>
+                                }
+                            </td>
+                            <td><small>@colore.DataCreazione.ToString("dd/MM/yyyy")</small></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="modificaColore(@colore.Id, '@colore.Nome', '@colore.Descrizione', '@colore.CodiceHex', @colore.Attivo.ToString().ToLower())">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                        onclick="eliminaColore(@colore.Id, '@colore.Nome')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Colori.Any())
+            {
+                <p class="text-center text-muted mt-4">Nessun colore presente. Creane uno nuovo.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuovo/Modifica Colore -->
+<div class="modal fade" id="modalNuovoColore" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SalvaColore" method="post" id="formColore">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nuovo Colore</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="coloreId" value="0" />
+                    
+                    <div class="mb-3">
+                        <label for="coloreNome" class="form-label">Nome *</label>
+                        <input type="text" class="form-control" name="Nome" id="coloreNome" required 
+                               placeholder="Es: Bianco, Nero, Rovere Naturale" />
+                        <span class="text-danger small" id="errorNome"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="coloreDescrizione" class="form-label">Descrizione</label>
+                        <textarea class="form-control" name="Descrizione" id="coloreDescrizione" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="coloreCodiceHex" class="form-label">Codice Colore (Hex)</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="colorePicker" value="#FFFFFF" />
+                            <input type="text" class="form-control" name="CodiceHex" id="coloreCodiceHex" 
+                                   placeholder="#FFFFFF" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" />
+                        </div>
+                        <small class="form-text text-muted">Formato: #RRGGBB (es: #FFFFFF)</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="true" name="Attivo" id="coloreAttivo" checked />
+                            <input type="hidden" name="Attivo" value="false" />
+                            <label class="form-check-label" for="coloreAttivo">
+                                Colore attivo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Form eliminazione -->
+<form id="formElimina" asp-action="EliminaColore" method="post" style="display:none;">
+    <input type="hidden" name="id" id="eliminaId" />
+</form>
+
+@section Scripts {
+    @if (TempData["MostraModal"] != null && TempData["ColoreCorrente"] != null)
+    {
+        <script>
+            var coloreDaRiaprire = @Html.Raw(TempData["ColoreCorrente"]);
+        </script>
+    }
+    
+    <script>
+        $(document).ready(function() {
+            // Sincronizza color picker con campo testo
+            $('#colorePicker').on('input', function() {
+                $('#coloreCodiceHex').val(this.value.toUpperCase());
+            });
+
+            $('#coloreCodiceHex').on('input', function() {
+                var hex = this.value;
+                if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                    $('#colorePicker').val(hex);
+                }
+            });
+
+            // Validazione
+            $('#formColore').on('submit', function(e) {
+                var isValid = true;
+                $('.is-invalid').removeClass('is-invalid');
+                $('.text-danger').text('');
+                
+                var nome = $('#coloreNome').val().trim();
+                if (!nome) {
+                    $('#coloreNome').addClass('is-invalid');
+                    $('#errorNome').text('Il nome è obbligatorio');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            $('#coloreNome').on('input', function() {
+                $(this).removeClass('is-invalid');
+                $('#errorNome').text('');
+            });
+            
+            // Riapri modal se ci sono errori dal server
+            if (typeof coloreDaRiaprire !== 'undefined') {
+                document.getElementById('coloreId').value = coloreDaRiaprire.Id || 0;
+                document.getElementById('coloreNome').value = coloreDaRiaprire.Nome || '';
+                document.getElementById('coloreDescrizione').value = coloreDaRiaprire.Descrizione || '';
+                document.getElementById('coloreCodiceHex').value = coloreDaRiaprire.CodiceHex || '';
+                document.getElementById('colorePicker').value = coloreDaRiaprire.CodiceHex || '#FFFFFF';
+                document.getElementById('coloreAttivo').checked = coloreDaRiaprire.Attivo;
+                new bootstrap.Modal(document.getElementById('modalNuovoColore')).show();
+            }
+        });
+
+        function modificaColore(id, nome, descrizione, codiceHex, attivo) {
+            document.getElementById('modalTitle').textContent = 'Modifica Colore';
+            document.getElementById('coloreId').value = id;
+            document.getElementById('coloreNome').value = nome;
+            document.getElementById('coloreDescrizione').value = descrizione || '';
+            document.getElementById('coloreCodiceHex').value = codiceHex || '';
+            document.getElementById('colorePicker').value = codiceHex || '#FFFFFF';
+            document.getElementById('coloreAttivo').checked = attivo;
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+            new bootstrap.Modal(document.getElementById('modalNuovoColore')).show();
+        }
+
+        function eliminaColore(id, nome) {
+            if (confirm('Confermi l\'eliminazione del colore \'' + nome + '\'?')) {
+                document.getElementById('eliminaId').value = id;
+                document.getElementById('formElimina').submit();
+            }
+        }
+
+        document.getElementById('modalNuovoColore').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('modalTitle').textContent = 'Nuovo Colore';
+            document.getElementById('coloreId').value = '0';
+            document.getElementById('formColore').reset();
+            document.getElementById('coloreAttivo').checked = true;
+            document.getElementById('colorePicker').value = '#FFFFFF';
+            $('.is-invalid').removeClass('is-invalid');
+            $('.text-danger').text('');
+        });
+    </script>
+}

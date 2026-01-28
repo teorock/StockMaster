@@ -137,8 +137,8 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="clienteEmail" class="form-label">Email *</label>
-                            <input type="email" class="form-control" name="Email" id="clienteEmail" required />
+                            <label for="clienteEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" name="Email" id="clienteEmail" />
                             <span class="text-danger small" id="errorEmail"></span>
                         </div>
                     </div>
@@ -222,7 +222,7 @@
                 }
                 
                 var email = $('#clienteEmail').val().trim();
-                if (!validaEmail(email)) {
+                if (email && !validaEmail(email)) {  // Valida solo se email è compilata
                     $('#clienteEmail').addClass('is-invalid');
                     $('#errorEmail').text('Email non valida');
                     isValid = false;

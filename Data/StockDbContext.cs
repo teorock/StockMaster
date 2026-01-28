@@ -18,6 +18,7 @@ namespace StockMaster.Data
         public DbSet<ArticoloStock> ArticoliStock { get; set; }
         public DbSet<TransizioneFase> TransizioniFase { get; set; }
         public DbSet<Materiale> Materiali { get; set; }
+        public DbSet<Colore> Colori { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

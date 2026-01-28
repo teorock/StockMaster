@@ -35,6 +35,7 @@
                     <tr>
                         <th>Nome</th>
                         <th>Descrizione</th>
+                        <th>Colore</th>
                         <th>Stato</th>
                         <th>Data Creazione</th>
                         <th style="width: 150px;">Azioni</th>
@@ -47,19 +48,22 @@
                             <td><strong>@materiale.Nome</strong></td>
                             <td>@materiale.Descrizione</td>
                             <td>
-                                @if (materiale.Attivo)
+                                @if (materiale.Colore != null)
                                 {
-                                    <span class="badge bg-success">Attivo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Non Attivo</span>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(materiale.Colore.CodiceHex))
+                                        {
+                                            <div style="width: 20px; height: 20px; background-color: @materiale.Colore.CodiceHex; border: 1px solid #ccc; border-radius: 3px; margin-right: 8px;"></div>
+                                        }
+                                        <span>@materiale.Colore.Nome</span>
+                                    </div>
                                 }
                             </td>
+                            
                             <td><small>@materiale.DataCreazione.ToString("dd/MM/yyyy")</small></td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="modificaMateriale(@materiale.Id, '@materiale.Nome', '@materiale.Descrizione', @materiale.Attivo.ToString().ToLower())">
+                                        onclick="modificaMateriale(@materiale.Id, '@materiale.Nome', '@materiale.Descrizione', '@materiale.ColoreId', @materiale.Attivo.ToString().ToLower())">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger" 
@@ -105,6 +109,13 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="materialeColoreId" class="form-label">Colore</label>
+                        <select class="form-select" name="ColoreId" id="materialeColoreId">
+                            <option value="">-- Nessun colore --</option>
+                        </select>
+                    </div>                    
+
+                    <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="true" name="Attivo" id="materialeAttivo" checked />
                             <input type="hidden" name="Attivo" value="false" />
@@ -128,6 +139,7 @@
     <input type="hidden" name="id" id="eliminaId" />
 </form>
 
+
 @section Scripts {
     @if (TempData["MostraModal"] != null && TempData["MaterialeCorrente"] != null)
     {
@@ -138,22 +150,16 @@
     
     <script>
         $(document).ready(function() {
-            $('#formMateriale').on('submit', function(e) {
-                var isValid = true;
-                $('.is-invalid').removeClass('is-invalid');
-                $('.text-danger').text('');
-                
-                var nome = $('#materialeNome').val().trim();
-                if (!nome) {
-                    $('#materialeNome').addClass('is-invalid');
-                    $('#errorNome').text('Il nome è obbligatorio');
-                    isValid = false;
+            // Popola dropdown colori
+            var colori = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Colori ?? new List<object>()));
+            var selectColore = $('#materialeColoreId');
+            
+            colori.forEach(function(c) {
+                var colorBox = '';
+                if (c.CodiceHex) {
+                    colorBox = '<span style="display:inline-block; width:12px; height:12px; background-color:' + c.CodiceHex + '; border:1px solid #ccc; border-radius:2px; margin-right:5px;"></span>';
                 }
-                
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
+                selectColore.append('<option value="' + c.Id + '">' + c.Nome + '</option>');
             });
             
             $('#materialeNome').on('input', function() {
@@ -165,16 +171,18 @@
                 document.getElementById('materialeId').value = materialeDaRiaprire.Id || 0;
                 document.getElementById('materialeNome').value = materialeDaRiaprire.Nome || '';
                 document.getElementById('materialeDescrizione').value = materialeDaRiaprire.Descrizione || '';
+                document.getElementById('materialeColoreId').value = materialeDaRiaprire.ColoreId || '';
                 document.getElementById('materialeAttivo').checked = materialeDaRiaprire.Attivo;
                 new bootstrap.Modal(document.getElementById('modalNuovoMateriale')).show();
             }
         });
-
-        function modificaMateriale(id, nome, descrizione, attivo) {
+ 
+        function modificaMateriale(id, nome, descrizione, coloreId, attivo) {
             document.getElementById('modalTitle').textContent = 'Modifica Materiale';
             document.getElementById('materialeId').value = id;
             document.getElementById('materialeNome').value = nome;
             document.getElementById('materialeDescrizione').value = descrizione || '';
+            document.getElementById('materialeColoreId').value = coloreId || '';
             document.getElementById('materialeAttivo').checked = attivo;
             $('.is-invalid').removeClass('is-invalid');
             $('.text-danger').text('');

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StockMaster.Data;
 
@@ -10,9 +11,11 @@ using StockMaster.Data;
 namespace StockMaster.Data.Migrations.Stock
 {
     [DbContext(typeof(StockDbContext))]
-    partial class StockDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260126092720_AggiuntaColori")]
+    partial class AggiuntaColori
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.12");
@@ -338,9 +341,6 @@ namespace StockMaster.Data.Migrations.Stock
                     b.Property<bool>("Attivo")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ColoreId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("DataCreazione")
                         .HasColumnType("TEXT");
 
@@ -354,8 +354,6 @@ namespace StockMaster.Data.Migrations.Stock
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ColoreId");
 
                     b.ToTable("Materiali");
                 });
@@ -438,15 +436,6 @@ namespace StockMaster.Data.Migrations.Stock
                     b.Navigation("Cliente");
 
                     b.Navigation("Fornitore");
-                });
-
-            modelBuilder.Entity("StockMaster.Models.Stock.Materiale", b =>
-                {
-                    b.HasOne("StockMaster.Models.Stock.Colore", "Colore")
-                        .WithMany()
-                        .HasForeignKey("ColoreId");
-
-                    b.Navigation("Colore");
                 });
 
             modelBuilder.Entity("StockMaster.Models.Stock.Articolo", b =>

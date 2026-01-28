@@ -1,12 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StockMaster.Models.Stock
 {
     /// <summary>
-    /// Anagrafica materiali (es: Rovere, Tiglio, MDF, etc.)
+    /// Anagrafica colori (es: Bianco, Nero, Rovere Naturale, etc.)
     /// </summary>
-    public class Materiale
+    public class Colore
     {
         [Key]
         public int Id { get; set; }
@@ -18,11 +17,8 @@ namespace StockMaster.Models.Stock
         [StringLength(200)]
         public string? Descrizione { get; set; }
 
-        // NUOVO: Colore del materiale
-        public int? ColoreId { get; set; }
-        
-        [ForeignKey(nameof(ColoreId))]
-        public virtual Colore? Colore { get; set; }
+        [StringLength(7)]
+        public string? CodiceHex { get; set; } // es: "#FFFFFF" per preview visiva
 
         public bool Attivo { get; set; } = true;
 

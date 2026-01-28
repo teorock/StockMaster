@@ -26,15 +26,19 @@ namespace StockMaster.Controllers
             {
                 Articoli = await _context.Articoli
                     .Include(a => a.Materiale)
+                        .ThenInclude(m => m!.Colore)  // CORRETTO: Include Colore tramite Materiale
                     .OrderBy(a => a.Codice)
                     .ToListAsync()
             };
             
             ViewBag.Materiali = await _context.Materiali
                 .Where(m => m.Attivo)
+                .Include(m => m.Colore)
                 .OrderBy(m => m.Nome)
-                .Select(m => new { m.Id, m.Nome })
+                .Select(m => new { m.Id, m.Nome, NomeColore = m.Colore != null ? m.Colore.Nome : null })
                 .ToListAsync();
+            
+            // ViewBag.Colori rimosso - non serve più per articoli
             
             return View(viewModel);
         }
@@ -396,8 +400,19 @@ namespace StockMaster.Controllers
         {
             var viewModel = new MaterialiViewModel
             {
-                Materiali = await _context.Materiali.OrderBy(m => m.Nome).ToListAsync()
+                Materiali = await _context.Materiali
+                    .Include(m => m.Colore)  // Include colore
+                    .OrderBy(m => m.Nome)
+                    .ToListAsync()
             };
+            
+            // Popola dropdown colori per la view
+            ViewBag.Colori = await _context.Colori
+                .Where(c => c.Attivo)
+                .OrderBy(c => c.Nome)
+                .Select(c => new { c.Id, c.Nome, c.CodiceHex })
+                .ToListAsync();
+            
             return View(viewModel);
         }
 
@@ -474,6 +489,93 @@ namespace StockMaster.Controllers
             }
 
             return RedirectToAction(nameof(Materiali));
-        }        
+        }
+
+        // ========== COLORI ==========
+
+        public async Task<IActionResult> Colori()
+        {
+            var viewModel = new ColoriViewModel
+            {
+                Colori = await _context.Colori.OrderBy(c => c.Nome).ToListAsync()
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SalvaColore(Colore colore)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errori = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                TempData["ErrorMessage"] = "❌ Dati non validi: " + string.Join(", ", errori);
+                TempData["ColoreCorrente"] = System.Text.Json.JsonSerializer.Serialize(colore);
+                TempData["MostraModal"] = "modalNuovoColore";
+                
+                return RedirectToAction(nameof(Colori));
+            }
+
+            try
+            {
+                if (colore.Id == 0)
+                {
+                    colore.DataCreazione = DateTime.Now;
+                    _context.Colori.Add(colore);
+                }
+                else
+                {
+                    _context.Colori.Update(colore);
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"✅ Colore '{colore.Nome}' salvato";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"❌ Errore: {ex.InnerException?.Message ?? ex.Message}";
+                TempData["ColoreCorrente"] = System.Text.Json.JsonSerializer.Serialize(colore);
+                TempData["MostraModal"] = "modalNuovoColore";
+            }
+
+            return RedirectToAction(nameof(Colori));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminaColore(int id)
+        {
+            try
+            {
+                var colore = await _context.Colori.FindAsync(id);
+                if (colore == null)
+                {
+                    TempData["ErrorMessage"] = "Colore non trovato";
+                    return RedirectToAction(nameof(Colori));
+                }
+
+                // CORRETTO: Verifica materiali invece di articoli
+                var haMateriali = await _context.Materiali.AnyAsync(m => m.ColoreId == id);
+                if (haMateriali)
+                {
+                    TempData["ErrorMessage"] = "❌ Impossibile eliminare: colore collegato a materiali";
+                    return RedirectToAction(nameof(Colori));
+                }
+
+                _context.Colori.Remove(colore);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"✅ Colore '{colore.Nome}' eliminato";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"❌ Errore: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Colori));
+        }
     }
 }
