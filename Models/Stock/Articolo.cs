@@ -6,7 +6,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Anagrafica articoli/prodotti gestiti a magazzino
     /// </summary>
-    public class Articolo
+    public class Articolo: BaseEntity
     {
         [Key]
         public int Id { get; set; }

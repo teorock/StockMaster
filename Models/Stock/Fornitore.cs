@@ -5,7 +5,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Anagrafica fornitori
     /// </summary>
-    public class Fornitore
+    public class Fornitore: BaseEntity
     {
         [Key]
         public int Id { get; set; }

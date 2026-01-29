@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using StockMaster.Models;
 using StockMaster.Models.Stock;
 
 namespace StockMaster.Data
@@ -64,5 +65,39 @@ namespace StockMaster.Data
                 new FaseLavorazione { Id = 7, Codice = "consegnato", Descrizione = "Consegnato", OrdineSequenza = 7, Attivo = true }
             );
         }
+
+                private readonly IHttpContextAccessor? _httpContextAccessor;
+
+                // Modifica constructor per accettare IHttpContextAccessor
+                public StockDbContext(
+                    DbContextOptions<StockDbContext> options,
+                    IHttpContextAccessor? httpContextAccessor = null) 
+                    : base(options)
+                {
+                    _httpContextAccessor = httpContextAccessor;
+                }
+
+                public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+                {
+                    var entries = ChangeTracker.Entries<BaseEntity>();
+                    var currentUser = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "System";
+
+                    foreach (var entry in entries)
+                    {
+                        if (entry.State == EntityState.Added)
+                        {
+                            entry.Entity.CreatedOn = DateTime.Now;
+                            entry.Entity.CreatedBy = currentUser;
+                        }
+                        else if (entry.State == EntityState.Modified)
+                        {
+                            entry.Entity.UpdatedOn = DateTime.Now;
+                            entry.Entity.UpdatedBy = currentUser;
+                        }
+                    }
+
+                    return await base.SaveChangesAsync(cancellationToken);
+                }
+
     }
 }

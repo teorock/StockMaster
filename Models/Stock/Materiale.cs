@@ -6,7 +6,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Anagrafica materiali (es: Rovere, Tiglio, MDF, etc.)
     /// </summary>
-    public class Materiale
+    public class Materiale: BaseEntity
     {
         [Key]
         public int Id { get; set; }

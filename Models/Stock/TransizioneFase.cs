@@ -6,7 +6,7 @@ namespace StockMaster.Models.Stock
     /// Storico di tutte le transizioni di fase
     /// Permette tracciabilità completa e analisi temporali
     /// </summary>
-    public class TransizioneFase
+    public class TransizioneFase: BaseEntity
     {
         [Key]
         public int Id { get; set; }

@@ -5,7 +5,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Anagrafica colori (es: Bianco, Nero, Rovere Naturale, etc.)
     /// </summary>
-    public class Colore
+    public class Colore: BaseEntity
     {
         [Key]
         public int Id { get; set; }

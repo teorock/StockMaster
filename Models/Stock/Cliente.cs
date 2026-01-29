@@ -5,7 +5,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Anagrafica clienti
     /// </summary>
-    public class Cliente
+    public class Cliente: BaseEntity
     {
         [Key]
         public int Id { get; set; }

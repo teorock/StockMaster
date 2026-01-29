@@ -5,7 +5,7 @@ namespace StockMaster.Models.Stock
     /// <summary>
     /// Definizione fasi di lavorazione possibili
     /// </summary>
-    public class FaseLavorazione
+    public class FaseLavorazione: BaseEntity
     {
         [Key]
         public int Id { get; set; }

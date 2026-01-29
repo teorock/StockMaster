@@ -7,7 +7,7 @@ namespace StockMaster.Models.Stock
     /// Rappresenta una quantità di articoli in una specifica fase di lavorazione
     /// Ogni record = lotto omogeneo per articolo + fase
     /// </summary>
-    public class ArticoloStock
+    public class ArticoloStock: BaseEntity
     {
         [Key]
         public int Id { get; set; }
@@ -15,7 +15,6 @@ namespace StockMaster.Models.Stock
         // Riferimento articolo tramite Id (foreign key standard)
         public int ArticoloId { get; set; }
 
-        [ForeignKey(nameof(ArticoloId))]
         public virtual Articolo? Articolo { get; set; }
 
         // Codice articolo denormalizzato (per comodità query/display)
