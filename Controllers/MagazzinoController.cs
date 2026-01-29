@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ using StockMaster.ViewModels.Stock;
 
 namespace StockMaster.Controllers
 {
-    public class MagazzinoController : Controller
+    [Authorize(Policy = "CanManageStock")]    public class MagazzinoController : Controller
     {
         private readonly StockDbContext _context;
         private readonly MagazzinoService _magazzinoService;

@@ -1,0 +1,141 @@
+@model StockMaster.ViewModels.Admin.EditUserViewModel
+@{
+    ViewData["Title"] = "Modifica Utente";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-gear"></i> Modifica Utente: @Model.UserName</h2>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Torna alla Lista
+        </a>
+    </div>
+
+    <!-- Messaggi -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Form Dati Utente -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-person"></i> Informazioni Utente</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="UserName" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" value="@Model.UserName" disabled />
+                            <small class="text-muted">Lo username non può essere modificato</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="NomeCompleto" class="form-label"></label>
+                            <input asp-for="NomeCompleto" class="form-control" />
+                            <span asp-validation-for="NomeCompleto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Reparto" class="form-label"></label>
+                            <input asp-for="Reparto" class="form-control" />
+                            <span asp-validation-for="Reparto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsAttivo" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsAttivo" class="form-check-label">Utente Attivo</label>
+                            </div>
+                        </div>
+
+                        <!-- Ruoli -->
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-shield-check"></i> Ruoli</label>
+                            @foreach (var role in Model.AllRoles)
+                            {
+                                <div class="form-check">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           name="SelectedRoles" 
+                                           value="@role" 
+                                           id="role_@role"
+                                           @(Model.CurrentRoles.Contains(role) ? "checked" : "") />
+                                    <label class="form-check-label" for="role_@role">@role</label>
+                                </div>
+                            }
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salva Modifiche
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Password -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-key"></i> Reset Password</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ResetPassword" asp-route-id="@Model.Id" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Nuova Password</label>
+                            <input type="password" class="form-control" name="newPassword" minlength="6" required />
+                            <small class="text-muted">Minimo 6 caratteri</small>
+                        </div>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-arrow-repeat"></i> Reimposta Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Azioni Pericolose -->
+            <div class="card mt-3 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Zona Pericolosa</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Azioni irreversibili</p>
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" 
+                          onsubmit="return confirm('ATTENZIONE: Eliminare l\'utente @Model.UserName?\n\nQuesta azione è IRREVERSIBILE.');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Elimina Utente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockMaster.Data;
@@ -8,6 +9,7 @@ using System.Text;
 
 namespace StockMaster.Controllers
 {
+    [Authorize(Policy = "CanEditAnagrafiche")]
     public class AnagraficheController : Controller
     {
         private readonly StockDbContext _context;
